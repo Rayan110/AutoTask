@@ -11,49 +11,50 @@ jobs:
     - name: 📥 Download code
       uses: actions/checkout@v4
       
-    - name: 🔧 Fix build configuration
-      run: |
-        # بررسی فایل build.gradle
-        echo "=== Checking app/build.gradle ==="
-        cat app/build.gradle
-        
-        # ایجاد فایل local.properties
-        echo "sdk.dir=$ANDROID_HOME" > local.properties
-        
-        # اضافه کردن compileSdkVersion اگر وجود ندارد
-        if ! grep -q "compileSdkVersion" app/build.gradle; then
-          echo "Adding compileSdkVersion..."
-          sed -i '/android {/a\    compileSdkVersion 33' app/build.gradle
-        fi
-        
-        # اضافه کردن سایر تنظیمات ضروری
-        if ! grep -q "minSdkVersion" app/build.gradle; then
-          echo "Adding minSdkVersion..."
-          sed -i '/compileSdkVersion/a\    minSdkVersion 21' app/build.gradle
-        fi
-        
-        if ! grep -q "targetSdkVersion" app/build.gradle; then
-          echo "Adding targetSdkVersion..."
-          sed -i '/minSdkVersion/a\    targetSdkVersion 33' app/build.gradle
-        fi
-        
-        echo "=== Fixed build.gradle ==="
-        cat app/build.gradle
-      
-    - name: 🤖 Setup Android SDK
+    - name: 🤖 Setup Android
       uses: android-actions/setup-android@v3
       
-    - name: ☕ Setup Java 17
-      uses: actions/setup-java@v4
-      with:
-        distribution: 'temurin'
-        java-version: '17'
+    - name: 🔧 Create fixed build.gradle
+      run: |
+        # ایجاد فایل build.gradle جدید با تنظیمات کامل
+        cat > app/build.gradle << 'EOF'
+        plugins {
+            id 'com.android.application'
+        }
+
+        android {
+            compileSdkVersion 33
+            buildToolsVersion "33.0.0"
+
+            defaultConfig {
+                minSdkVersion 21
+                targetSdkVersion 33
+                versionCode 1
+                versionName "1.0"
+            }
+
+            buildTypes {
+                debug {
+                    debuggable true
+                }
+                release {
+                    minifyEnabled false
+                    proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+                }
+            }
+        }
+
+        dependencies {
+            implementation fileTree(dir: 'libs', include: ['*.jar'])
+        }
+        EOF
+        
+        echo "sdk.dir=$ANDROID_HOME" > local.properties
         
     - name: 🏗️ Build APK
       run: |
         chmod +x ./gradlew
-        ./gradlew clean
-        ./gradlew assembleDebug --stacktrace
+        ./gradlew assembleDebug
         
     - name: 📤 Upload APK
       uses: actions/upload-artifact@v4
