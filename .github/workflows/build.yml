@@ -11,22 +11,23 @@ jobs:
     - name: 📥 Download code
       uses: actions/checkout@v4
       
+    - name: 🤖 Setup Android SDK
+      uses: android-actions/setup-android@v3
+      
+    - name: 📝 Create local.properties
+      run: |
+        echo "sdk.dir=$ANDROID_HOME" > local.properties
+        
+    - name: 🔍 Check files
+      run: ls -la
+      
     - name: ☕ Setup Java
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
-        java-version: '17'
+        java-version: '11'
         
-    - name: 🤖 Setup Android SDK
-      uses: android-actions/setup-android@v3
-      
     - name: 🏗️ Build APK
       run: |
         chmod +x ./gradlew
-        ./gradlew assembleDebug
-        
-    - name: 📤 Upload APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: AutoTask-APK
-        path: app/build/outputs/apk/debug/
+        ./grad
