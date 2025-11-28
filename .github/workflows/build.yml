@@ -11,6 +11,15 @@ jobs:
     - name: 📥 Download code
       uses: actions/checkout@v4
       
+    - name: 🔍 Check project structure
+      run: |
+        echo "=== Listing files ==="
+        ls -la
+        echo "=== Looking for gradlew ==="
+        find . -name "gradlew" -type f
+        echo "=== Checking Android files ==="
+        find . -name "build.gradle" -type f
+      
     - name: 🤖 Setup Android SDK
       uses: android-actions/setup-android@v3
       
@@ -18,9 +27,6 @@ jobs:
       run: |
         echo "sdk.dir=$ANDROID_HOME" > local.properties
         
-    - name: 🔍 Check files
-      run: ls -la
-      
     - name: ☕ Setup Java
       uses: actions/setup-java@v4
       with:
@@ -29,5 +35,16 @@ jobs:
         
     - name: 🏗️ Build APK
       run: |
+        echo "=== Current directory ==="
+        pwd
+        echo "=== Setting permissions ==="
         chmod +x ./gradlew
-        ./grad
+        echo "=== Starting build ==="
+        ./gradlew tasks --all || true
+        ./gradlew assembleDebug
+        
+    - name: 📤 Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: AutoTask-APK
+        path: app/build/outputs/apk/
