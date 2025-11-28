@@ -11,15 +11,6 @@ jobs:
     - name: 📥 Download code
       uses: actions/checkout@v4
       
-    - name: 🔍 Check project structure
-      run: |
-        echo "=== Listing files ==="
-        ls -la
-        echo "=== Looking for gradlew ==="
-        find . -name "gradlew" -type f
-        echo "=== Checking Android files ==="
-        find . -name "build.gradle" -type f
-      
     - name: 🤖 Setup Android SDK
       uses: android-actions/setup-android@v3
       
@@ -27,20 +18,15 @@ jobs:
       run: |
         echo "sdk.dir=$ANDROID_HOME" > local.properties
         
-    - name: ☕ Setup Java
+    - name: ☕ Setup Java 17
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
-        java-version: '11'
+        java-version: '17'
         
     - name: 🏗️ Build APK
       run: |
-        echo "=== Current directory ==="
-        pwd
-        echo "=== Setting permissions ==="
         chmod +x ./gradlew
-        echo "=== Starting build ==="
-        ./gradlew tasks --all || true
         ./gradlew assembleDebug
         
     - name: 📤 Upload APK
