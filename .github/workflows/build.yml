@@ -11,7 +11,36 @@ jobs:
     - name: 📥 Download code
       uses: actions/checkout@v4
       
-    - name: 🤖 Setup Android
+    - name: 🔧 Fix build configuration
+      run: |
+        # بررسی فایل build.gradle
+        echo "=== Checking app/build.gradle ==="
+        cat app/build.gradle
+        
+        # ایجاد فایل local.properties
+        echo "sdk.dir=$ANDROID_HOME" > local.properties
+        
+        # اضافه کردن compileSdkVersion اگر وجود ندارد
+        if ! grep -q "compileSdkVersion" app/build.gradle; then
+          echo "Adding compileSdkVersion..."
+          sed -i '/android {/a\    compileSdkVersion 33' app/build.gradle
+        fi
+        
+        # اضافه کردن سایر تنظیمات ضروری
+        if ! grep -q "minSdkVersion" app/build.gradle; then
+          echo "Adding minSdkVersion..."
+          sed -i '/compileSdkVersion/a\    minSdkVersion 21' app/build.gradle
+        fi
+        
+        if ! grep -q "targetSdkVersion" app/build.gradle; then
+          echo "Adding targetSdkVersion..."
+          sed -i '/minSdkVersion/a\    targetSdkVersion 33' app/build.gradle
+        fi
+        
+        echo "=== Fixed build.gradle ==="
+        cat app/build.gradle
+      
+    - name: 🤖 Setup Android SDK
       uses: android-actions/setup-android@v3
       
     - name: ☕ Setup Java 17
@@ -20,19 +49,11 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
         
-    - name: 🔧 Fix build config
-      run: |
-        # ایجاد فایل local.properties
-        echo "sdk.dir=$ANDROID_HOME" > local.properties
-        
-        # تنظیم compileSdkVersion در فایل build.gradle اگر نیاز باشد
-        find . -name "build.gradle" -type f
-        
     - name: 🏗️ Build APK
       run: |
         chmod +x ./gradlew
         ./gradlew clean
-        ./gradlew assembleDebug --no-daemon
+        ./gradlew assembleDebug --stacktrace
         
     - name: 📤 Upload APK
       uses: actions/upload-artifact@v4
